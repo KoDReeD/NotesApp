@@ -22,6 +22,7 @@
 
     <ItemGroup>
       <Folder Include="Models\Accounts\Response\" />
+      <Folder Include="Models\Notes\Response\" />
     </ItemGroup>
 
 </Project>
