@@ -15,4 +15,9 @@ public class NoteTags
     
     [ForeignKey("TagId")]
     public virtual Tag Tag { get; set; }
+    
+    public int WhoCreatedId { get; set; }
+    
+    [ForeignKey("WhoCreatedId")]
+    public virtual Account WhoCreated { get; set; }
 }

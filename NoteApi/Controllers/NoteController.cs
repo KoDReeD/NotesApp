@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NotesApi.DbModels;
 using NotesApi.Models;
@@ -17,9 +18,9 @@ public class NoteController : ControllerBase
     {
         _notesService = notesService;
     }
-
+    
     [HttpGet]
-    public async Task<ActionResult<Page<Note>>> GetAllByUser(RequestFilter filter, int id)
+    public async Task<ActionResult<Page<Note>>> GetAllByUser([FromQuery]RequestFilter filter, int id)
     {
         return Ok(await _notesService.GetAllByUserAsync(filter, id));
     }

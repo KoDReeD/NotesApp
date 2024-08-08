@@ -31,5 +31,5 @@ public class Note
     [MaxLength(7)] // Длина строки для HEX цвета (#RRGGBB)
     public string? Color { get; set; }
 
-    public List<NoteTags> Tags { get; set; } = new List<NoteTags>();
+    public ICollection<NoteTags> Tags { get; set; }
 }

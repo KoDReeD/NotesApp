@@ -34,18 +34,38 @@ public class NoteService
 
     public async Task<Note?> GetByIdAsync(int id)
     {
-        return await _context.Notes.FirstOrDefaultAsync(x => x.Id == id);
+        return await _context.Notes
+                   .Include(x => x.WhoCreated)
+                   .Include(x => x.WhoUpdated)
+                   .FirstOrDefaultAsync(x => x.Id == id)
+               ?? throw new KeyNotFoundException();
     }
 
     public async Task<Note> CreateAsync(NoteRequest model)
     {
         var dbModel = _mapper.Map<Note>(model);
         dbModel.CreatedDate = DateTime.Now;
+
+        var allDbTags = _context.Tags.ToList();
+        
         await _context.Notes.AddAsync(dbModel);
         await _context.SaveChangesAsync();
+        
+        foreach (var tag in dbModel.Tags)
+        {
+            var existingTag = allDbTags.Any(x => x.Id == tag.Id);
+            if (!existingTag) throw new KeyNotFoundException($"Тег с ID[{tag.Id}] не найден");
+            var noteTag = new NoteTags()
+            {
+                NoteId = dbModel.Id,
+                TagId = tag.Id
+            };
+            await _context.NoteTags.AddAsync(noteTag);
+        }
+        
         return dbModel;
     }
-    
+
     public async Task<bool> DeleteAsync(int id)
     {
         var noteToDelete = await GetByIdAsync(id);
@@ -53,7 +73,7 @@ public class NoteService
         await _context.SaveChangesAsync();
         return true;
     }
-    
+
     public async Task<Note> UpdateAsync(NoteRequest model)
     {
         var dbModel = _mapper.Map<Note>(model);

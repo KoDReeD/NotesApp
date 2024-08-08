@@ -4,9 +4,24 @@ using System.Text;
 
 namespace NotesApi;
 
+public enum Role
+{
+    Administrator = 1,
+    User = 2,
+    Guest = 3
+}
+
 public class AccountHelper
 {
-    /// Метод для генерации соли
+    public static string GetStringRole(Role role) => role switch
+    {
+        Role.Administrator => "Administrator",
+        Role.User => "User",
+        Role.Guest => "Guest",
+        _ => throw new KeyNotFoundException()
+    };
+
+    // Метод для генерации соли
     public static byte[] GenerateSalt(int size = 10)
     {
         using (var rng = new RNGCryptoServiceProvider())
@@ -16,7 +31,7 @@ public class AccountHelper
             return salt;
         }
     }
-    
+
     // Метод для хэширования пароля с использованием соли
     public static string HashPassword(string password, byte[] salt)
     {
@@ -33,12 +48,12 @@ public class AccountHelper
 
             // Вычисляем хэш
             byte[] hash = sha256.ComputeHash(passwordWithSalt);
-        
+
             // Преобразуем массив байтов в строку Base64 и возвращаем
             return Convert.ToBase64String(hash);
         }
     }
-    
+
     // Метод для проверки пароля
     public static bool VerifyPassword(string password, byte[] salt, string passwordHash)
     {

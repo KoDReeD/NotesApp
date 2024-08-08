@@ -4,11 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace NotesApi.DbModels;
 
-public enum Role
-{
-    Administrator = 1,
-    User = 2
-}
+
 
 public class Account
 {
@@ -44,7 +40,8 @@ public class Account
     public string? AvatarPath { get; set; }
     public bool IsVerified { get; set; }
 
-    public virtual ICollection<Note> CreatedNotesList { get; set; } = new List<Note>();
-    public virtual ICollection<Note> UpdatedNotesList { get; set; } = new List<Note>();
-    public virtual ICollection<RefreshToken> Tokens { get; set; } = new List<RefreshToken>();
+    public virtual ICollection<Note> CreatedNotesList { get; set; } 
+    public virtual ICollection<Note> UpdatedNotesList { get; set; }
+    public virtual ICollection<RefreshToken> Tokens { get; set; }
+    public virtual ICollection<Tag> Tags { get; set; } 
 }

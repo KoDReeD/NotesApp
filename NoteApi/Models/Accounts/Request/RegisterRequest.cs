@@ -13,7 +13,4 @@ public class RegisterRequest
     [Required, MaxLength(255)] public string Lastname { get; set; }
 
     [Required] public string Password { get; set; }
-
-    [Compare("Password", ErrorMessage = "Пароли не совпадают.")]
-    public string ConfirmPassword { get; set; }
 }
