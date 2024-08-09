@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -13,6 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddDbContext<ApplicatonDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("PostgreConnecton")));
@@ -22,12 +26,13 @@ builder.Services.AddAutoMapper(typeof(AppMappingProfile));
 builder.Services.AddScoped<IAccountService, AccountServices>();
 builder.Services.AddScoped<INoteService, NoteService>();
 builder.Services.AddScoped<ITagService, TagServices>();
-builder.Services.AddScoped<JwtHelper>();
+builder.Services.AddScoped<TokenHelper>();
 
 // токены
 var jwtOptions = builder.Configuration
     .GetSection("JwtOptions").Get<JwtOptions>();
 builder.Services.AddSingleton(jwtOptions);
+
 
 // 👇 Конфигурация Authentication Service
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -35,8 +40,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         byte[] signingKeyBytes = Encoding.UTF8
             .GetBytes(jwtOptions.SigningKey);
-
-        opts.TokenValidationParameters = new TokenValidationParameters
+        var tokenValidateParameters = new TokenValidationParameters
         {
             ValidateIssuer = false,
             ValidateAudience = false,
@@ -44,6 +48,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(signingKeyBytes)
         };
+        TokenHelper.TokenValidationParameters = tokenValidateParameters;
+        opts.TokenValidationParameters = tokenValidateParameters;
     });
 
 builder.Services.AddSwaggerGen(option =>
@@ -65,19 +71,22 @@ builder.Services.AddSwaggerGen(option =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
-            new string[]{}
+            new string[] { }
         }
     });
 });
 
-
-
-
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions()
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                       ForwardedHeaders.XForwardedProto
+});
 
 app.UseMiddleware<ErrorMiddleware>();
 app.UseMiddleware<AccountMiddleware>();
@@ -91,8 +100,8 @@ using (var scope = app.Services.CreateScope())
 
 // if (app.Environment.IsDevelopment())
 // {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 // }
 
 app.UseHttpsRedirection();

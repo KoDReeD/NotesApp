@@ -24,8 +24,7 @@ public class TagServices : ITagService
     private readonly Account _currentUser;
     private readonly IMapper _mapper;
 
-    public TagServices(ApplicatonDbContext context, IHttpContextAccessor httpContextAccessor, Account currentUser,
-        IMapper mapper)
+    public TagServices(ApplicatonDbContext context, IHttpContextAccessor httpContextAccessor, IMapper mapper)
     {
         _context = context;
         _httpContextAccessor = httpContextAccessor;

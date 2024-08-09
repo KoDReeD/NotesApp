@@ -20,14 +20,14 @@ public class RefreshToken
     public string CreatedIp { get; set; }
     public string? CreatedBrowser { get; set; }
     
-    public int Status { get; set; }
+    public RefreshTokenStatus Status { get; set; }
     public DateTime? ChangeStatusDate { get; set; }
     public string? ChangeStatusIp { get; set; }
 }
 
-public enum TokenStatus
+public enum RefreshTokenStatus
 {
-    created,
-    revoked,
-    user
+    Created,
+    Revoked,
+    Used
 }
