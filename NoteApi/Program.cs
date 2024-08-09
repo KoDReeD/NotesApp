@@ -18,7 +18,10 @@ builder.Services.AddDbContext<ApplicatonDbContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("PostgreConnecton")));
 
 builder.Services.AddAutoMapper(typeof(AppMappingProfile));
+
 builder.Services.AddScoped<IAccountService, AccountServices>();
+builder.Services.AddScoped<INoteService, NoteService>();
+builder.Services.AddScoped<ITagService, TagServices>();
 builder.Services.AddScoped<JwtHelper>();
 
 // токены

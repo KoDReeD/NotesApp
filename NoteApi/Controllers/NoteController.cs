@@ -38,7 +38,7 @@ public class NoteController : ControllerBase
     }
     
     [HttpDelete]
-    public async Task<ActionResult<bool>> Create(int id)
+    public async Task<ActionResult<bool>> Delete(int id)
     {
         return Ok(await _notesService.DeleteAsync(id));
     }

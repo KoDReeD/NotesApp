@@ -8,7 +8,16 @@ using NotesApi.Models.Notes.Request;
 
 namespace NotesApi.Services;
 
-public class NoteService
+public interface INoteService
+{
+    public Task<Page<Note>> GetAllByUserAsync(RequestFilter filter, int id);
+    public Task<Note> GetByIdAsync(int id);
+    public Task<Note> CreateAsync(NoteRequest model);
+    public Task<bool> DeleteAsync(int id);
+    public Task<Note> UpdateAsync(NoteRequest model);
+}
+
+public class NoteService : INoteService
 {
     private readonly ApplicatonDbContext _context;
     private readonly IMapper _mapper;
@@ -28,7 +37,7 @@ public class NoteService
         var query = _context.Notes
             .Include(x => x.WhoCreated)
             .Include(x => x.WhoUpdated)
-            .Where(x => x.WhoCreatedId == id);
+            .Where(x => x.WhoCreatedId == _currentUser.Id);
         return new Page<Note>(filter)
         {
             Objects = await query.ToListAsync(),
@@ -36,38 +45,42 @@ public class NoteService
         };
     }
 
-    public async Task<Note?> GetByIdAsync(int id)
+    public async Task<Note> GetByIdAsync(int id)
     {
         return await _context.Notes
                    .Include(x => x.WhoCreated)
                    .Include(x => x.WhoUpdated)
-                   .FirstOrDefaultAsync(x => x.Id == id)
+                   .FirstOrDefaultAsync(x => x.Id == id && x.WhoCreatedId == _currentUser.Id)
                ?? throw new KeyNotFoundException();
     }
 
     public async Task<Note> CreateAsync(NoteRequest model)
     {
-        var dbModel = _mapper.Map<Note>(model);
-        dbModel.CreatedDate = DateTime.Now;
+        var dbNote = _mapper.Map<Note>(model);
+        dbNote.CreatedDate = DateTime.Now;
+        dbNote.WhoCreatedId = _currentUser.Id;
 
-        var allDbTags = _context.Tags.ToList();
-        
-        await _context.Notes.AddAsync(dbModel);
+        var allDbTags = _context.Tags
+            .Where(x => x.WhoCreatedId == _currentUser.Id)
+            .ToList();
+
+        await _context.Notes.AddAsync(dbNote);
         await _context.SaveChangesAsync();
-        
-        foreach (var tag in dbModel.Tags)
+
+        foreach (var tag in dbNote.Tags)
         {
             var existingTag = allDbTags.Any(x => x.Id == tag.Id);
             if (!existingTag) throw new KeyNotFoundException($"Тег с ID[{tag.Id}] не найден");
             var noteTag = new NoteTags()
             {
-                NoteId = dbModel.Id,
-                TagId = tag.Id
+                NoteId = dbNote.Id,
+                TagId = tag.Id,
+                WhoCreatedId = _currentUser.Id
             };
             await _context.NoteTags.AddAsync(noteTag);
         }
-        
-        return dbModel;
+
+        return dbNote;
     }
 
     public async Task<bool> DeleteAsync(int id)

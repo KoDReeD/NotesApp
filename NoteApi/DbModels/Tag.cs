@@ -12,6 +12,8 @@ public class Tag
     [Required, MaxLength(255)]
     public string Title { get; set; }
     
+    [Required]
+    public DateTime CreatedDate { get; set; }
     public int WhoCreatedId { get; set; }
     
     [ForeignKey("WhoCreatedId")]
