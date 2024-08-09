@@ -12,11 +12,15 @@ public class NoteService
 {
     private readonly ApplicatonDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly Account _currentUser;
 
-    public NoteService(ApplicatonDbContext context, IMapper mapper)
+    public NoteService(ApplicatonDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
         _mapper = mapper;
+        _httpContextAccessor = httpContextAccessor;
+        _currentUser = (Account)_httpContextAccessor.HttpContext.Items["Account"];
     }
 
     public async Task<Page<Note>> GetAllByUserAsync(RequestFilter filter, int id)

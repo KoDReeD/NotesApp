@@ -77,6 +77,7 @@ builder.Services.AddSwaggerGen(option =>
 var app = builder.Build();
 
 app.UseMiddleware<ErrorMiddleware>();
+app.UseMiddleware<AccountMiddleware>();
 
 // Применение миграций при запуске
 using (var scope = app.Services.CreateScope())
