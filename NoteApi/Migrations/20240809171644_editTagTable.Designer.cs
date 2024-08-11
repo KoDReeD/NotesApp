@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NotesApi;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NotesApi.Migrations
 {
     [DbContext(typeof(ApplicatonDbContext))]
-    partial class ApplicatonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240809171644_editTagTable")]
+    partial class editTagTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,7 +37,7 @@ namespace NotesApi.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -50,7 +53,7 @@ namespace NotesApi.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastEntryDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Lastname")
                         .IsRequired()
@@ -69,7 +72,7 @@ namespace NotesApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -89,15 +92,12 @@ namespace NotesApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AccountCreatedId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Color")
                         .HasMaxLength(7)
                         .HasColumnType("character varying(7)");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -108,34 +108,47 @@ namespace NotesApi.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("WhoCreatedId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WhoUpdatedId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountCreatedId");
+                    b.HasIndex("WhoCreatedId");
+
+                    b.HasIndex("WhoUpdatedId");
 
                     b.ToTable("Notes");
                 });
 
             modelBuilder.Entity("NotesApi.DbModels.NoteTags", b =>
                 {
-                    b.Property<int>("TagId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("NoteId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("AccountCreatedId")
+                    b.Property<int>("TagId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Id")
+                    b.Property<int>("WhoCreatedId")
                         .HasColumnType("integer");
 
-                    b.HasKey("TagId", "NoteId");
-
-                    b.HasIndex("AccountCreatedId");
+                    b.HasKey("Id");
 
                     b.HasIndex("NoteId");
+
+                    b.HasIndex("TagId");
+
+                    b.HasIndex("WhoCreatedId");
 
                     b.ToTable("NoteTags");
                 });
@@ -152,7 +165,7 @@ namespace NotesApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ChangeStatusDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ChangeStatusIp")
                         .HasColumnType("text");
@@ -161,14 +174,14 @@ namespace NotesApi.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedIp")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("ExpiresDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -192,67 +205,70 @@ namespace NotesApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AccountCreatedId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Color")
                         .HasMaxLength(7)
                         .HasColumnType("character varying(7)");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<int>("WhoCreatedId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountCreatedId");
+                    b.HasIndex("WhoCreatedId");
 
                     b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("NotesApi.DbModels.Note", b =>
                 {
-                    b.HasOne("NotesApi.DbModels.Account", "AccountCreated")
+                    b.HasOne("NotesApi.DbModels.Account", "WhoCreated")
                         .WithMany("CreatedNotesList")
-                        .HasForeignKey("AccountCreatedId")
+                        .HasForeignKey("WhoCreatedId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AccountCreated");
+                    b.HasOne("NotesApi.DbModels.Account", "WhoUpdated")
+                        .WithMany("UpdatedNotesList")
+                        .HasForeignKey("WhoUpdatedId");
+
+                    b.Navigation("WhoCreated");
+
+                    b.Navigation("WhoUpdated");
                 });
 
             modelBuilder.Entity("NotesApi.DbModels.NoteTags", b =>
                 {
-                    b.HasOne("NotesApi.DbModels.Account", "AccountCreated")
-                        .WithMany("NoteTags")
-                        .HasForeignKey("AccountCreatedId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("NotesApi.DbModels.Note", "Note")
-                        .WithMany("NoteTags")
+                        .WithMany("Tags")
                         .HasForeignKey("NoteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("NotesApi.DbModels.Tag", "Tag")
-                        .WithMany("NoteTags")
+                        .WithMany("Notes")
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AccountCreated");
+                    b.HasOne("NotesApi.DbModels.Account", "WhoCreated")
+                        .WithMany()
+                        .HasForeignKey("WhoCreatedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Note");
 
                     b.Navigation("Tag");
+
+                    b.Navigation("WhoCreated");
                 });
 
             modelBuilder.Entity("NotesApi.DbModels.RefreshToken", b =>
@@ -268,34 +284,34 @@ namespace NotesApi.Migrations
 
             modelBuilder.Entity("NotesApi.DbModels.Tag", b =>
                 {
-                    b.HasOne("NotesApi.DbModels.Account", "AccountCreated")
+                    b.HasOne("NotesApi.DbModels.Account", "WhoCreated")
                         .WithMany("Tags")
-                        .HasForeignKey("AccountCreatedId")
+                        .HasForeignKey("WhoCreatedId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AccountCreated");
+                    b.Navigation("WhoCreated");
                 });
 
             modelBuilder.Entity("NotesApi.DbModels.Account", b =>
                 {
                     b.Navigation("CreatedNotesList");
 
-                    b.Navigation("NoteTags");
-
                     b.Navigation("Tags");
 
                     b.Navigation("Tokens");
+
+                    b.Navigation("UpdatedNotesList");
                 });
 
             modelBuilder.Entity("NotesApi.DbModels.Note", b =>
                 {
-                    b.Navigation("NoteTags");
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("NotesApi.DbModels.Tag", b =>
                 {
-                    b.Navigation("NoteTags");
+                    b.Navigation("Notes");
                 });
 #pragma warning restore 612, 618
         }

@@ -16,6 +16,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 
+// AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddDbContext<ApplicatonDbContext>(opt =>
@@ -34,7 +35,7 @@ var jwtOptions = builder.Configuration
 builder.Services.AddSingleton(jwtOptions);
 
 
-// 👇 Конфигурация Authentication Service
+#region Конфигурация Authentication Service
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opts =>
     {
@@ -79,6 +80,7 @@ builder.Services.AddSwaggerGen(option =>
         }
     });
 });
+#endregion
 
 var app = builder.Build();
 

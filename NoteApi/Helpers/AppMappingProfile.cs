@@ -6,6 +6,7 @@ using NotesApi.Models.Jwt.Response;
 using NotesApi.Models.Notes.Request;
 using NotesApi.Models.Notes.Response;
 using NotesApi.Models.Tag;
+using NotesApi.Models.Tag.Response;
 
 namespace NotesApi;
 
@@ -26,7 +27,7 @@ public class AppMappingProfile : Profile
             .ForMember(auth => auth.CreateRefreshTokenDate, refresh => refresh.MapFrom(srs => srs.CreatedDate))
             .ForMember(auth => auth.Id, opt => opt.Ignore());
         
-        
         CreateMap<TagRequest, Tag>();
+        CreateMap<Tag, TagResponse>();
     }
 }

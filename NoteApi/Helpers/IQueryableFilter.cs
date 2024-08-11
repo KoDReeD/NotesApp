@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using NotesApi.DbModels;
 using NotesApi.Models;
+using NotesApi.Models.Tag.Response;
 
 namespace NotesApi;
 
@@ -33,7 +34,22 @@ public static class IQueryableFilter
                 source = source.Where(x =>
                     EF.Functions.ILike(x.Title, term) ||
                     EF.Functions.ILike(x.CreatedDate.ToString("o", CultureInfo.InvariantCulture), term) ||
-                    x.Tags.Any(tag => EF.Functions.ILike(tag.Tag.Title, term)));
+                    x.NoteTags.Any(tag => EF.Functions.ILike(tag.Tag.Title, term)));
+            }
+        }
+
+        return OrderFiltration(source, filter);
+    }
+    
+    public static IQueryable<TagResponse> TagsFilter(this IQueryable<TagResponse> source, RequestFilter filter)
+    {
+        source = source.OrderBy(x => x.Id);
+        if (filter.GetSearchString(out var searchTerms))
+        {
+            foreach (var term in searchTerms)
+            {
+                source = source.Where(x =>
+                    EF.Functions.ILike(x.Title, term));
             }
         }
 

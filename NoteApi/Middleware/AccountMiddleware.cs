@@ -36,8 +36,10 @@ public class AccountMiddleware
                          ?.Value 
                      ?? throw new KeyNotFoundException("Токен не валидный");
         
-        var account = await context.Accounts.FirstOrDefaultAsync(x => x.Id == int.Parse(userId))
-                      ?? throw new KeyNotFoundException("Токен не валидный");
-        httpContext.Items["Account"] = account;
+        var account = await context.Accounts.FirstOrDefaultAsync(x => x.Id == int.Parse(userId));
+        if (account != null)
+        {
+            httpContext.Items["Account"] = account;
+        }
     }
 }

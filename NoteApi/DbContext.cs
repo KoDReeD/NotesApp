@@ -18,13 +18,26 @@ public class ApplicatonDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Note>()
-            .HasOne(n => n.WhoCreated)
+            .HasOne(n => n.AccountCreated)
             .WithMany(a => a.CreatedNotesList)
-            .HasForeignKey(n => n.WhoCreatedId);
+            .HasForeignKey(n => n.AccountCreatedId);
 
-        modelBuilder.Entity<Note>()
-            .HasOne(n => n.WhoUpdated)
-            .WithMany(a => a.UpdatedNotesList)
-            .HasForeignKey(n => n.WhoUpdatedId);
+        modelBuilder.Entity<NoteTags>()
+            .HasKey(nt => new { nt.TagId, nt.NoteId });
+        
+        modelBuilder.Entity<NoteTags>()
+            .HasOne(nt => nt.Note)
+            .WithMany(n => n.NoteTags)
+            .HasForeignKey(nt => nt.NoteId);
+
+        modelBuilder.Entity<NoteTags>()
+            .HasOne(nt => nt.Tag)
+            .WithMany(t => t.NoteTags)
+            .HasForeignKey(nt => nt.TagId);
+        
+        modelBuilder.Entity<NoteTags>()
+            .HasOne(nt => nt.AccountCreated)
+            .WithMany(a => a.NoteTags)
+            .HasForeignKey(nt => nt.AccountCreatedId);
     }
 }

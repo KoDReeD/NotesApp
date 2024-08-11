@@ -35,9 +35,8 @@ public class NoteService : INoteService
     public async Task<Page<Note>> GetAllByUserAsync(RequestFilter filter, int id)
     {
         var query = _context.Notes
-            .Include(x => x.WhoCreated)
-            .Include(x => x.WhoUpdated)
-            .Where(x => x.WhoCreatedId == _currentUser.Id);
+            .Include(x => x.AccountCreated)
+            .Where(x => x.AccountCreatedId == _currentUser.Id);
         return new Page<Note>(filter)
         {
             Objects = await query.ToListAsync(),
@@ -48,9 +47,8 @@ public class NoteService : INoteService
     public async Task<Note> GetByIdAsync(int id)
     {
         return await _context.Notes
-                   .Include(x => x.WhoCreated)
-                   .Include(x => x.WhoUpdated)
-                   .FirstOrDefaultAsync(x => x.Id == id && x.WhoCreatedId == _currentUser.Id)
+                   .Include(x => x.AccountCreated)
+                   .FirstOrDefaultAsync(x => x.Id == id && x.AccountCreatedId == _currentUser.Id)
                ?? throw new KeyNotFoundException();
     }
 
@@ -58,16 +56,16 @@ public class NoteService : INoteService
     {
         var dbNote = _mapper.Map<Note>(model);
         dbNote.CreatedDate = DateTime.Now;
-        dbNote.WhoCreatedId = _currentUser.Id;
+        dbNote.AccountCreatedId = _currentUser.Id;
 
         var allDbTags = _context.Tags
-            .Where(x => x.WhoCreatedId == _currentUser.Id)
+            .Where(x => x.AccountCreatedId == _currentUser.Id)
             .ToList();
 
         await _context.Notes.AddAsync(dbNote);
         await _context.SaveChangesAsync();
 
-        foreach (var tag in dbNote.Tags)
+        foreach (var tag in dbNote.NoteTags)
         {
             var existingTag = allDbTags.Any(x => x.Id == tag.Id);
             if (!existingTag) throw new KeyNotFoundException($"Тег с ID[{tag.Id}] не найден");
@@ -75,7 +73,7 @@ public class NoteService : INoteService
             {
                 NoteId = dbNote.Id,
                 TagId = tag.Id,
-                WhoCreatedId = _currentUser.Id
+                AccountCreatedId = _currentUser.Id
             };
             await _context.NoteTags.AddAsync(noteTag);
         }

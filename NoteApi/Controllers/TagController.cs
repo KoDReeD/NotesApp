@@ -43,8 +43,8 @@ public class TagController : ControllerBase
     }
     
     [HttpPut]
-    public async Task<ActionResult<bool>> Update(TagRequest model)
+    public async Task<ActionResult<bool>> Update(int id, [FromBody]TagRequest model)
     {
-        return Ok(await _tagService.UpdateAsync(model));
+        return Ok(await _tagService.UpdateAsync(id, model));
     }
 }

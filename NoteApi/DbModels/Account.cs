@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace NotesApi.DbModels;
 
@@ -39,9 +40,9 @@ public class Account
 
     public string? AvatarPath { get; set; }
     public bool IsVerified { get; set; }
-
+    
     public virtual ICollection<Note> CreatedNotesList { get; set; } 
-    public virtual ICollection<Note> UpdatedNotesList { get; set; }
+    public virtual ICollection<NoteTags> NoteTags { get; set; } 
     public virtual ICollection<RefreshToken> Tokens { get; set; }
     public virtual ICollection<Tag> Tags { get; set; } 
 }

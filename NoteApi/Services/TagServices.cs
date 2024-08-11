@@ -3,18 +3,19 @@ using Microsoft.EntityFrameworkCore;
 using NotesApi.DbModels;
 using NotesApi.Middleware;
 using NotesApi.Models;
-using NotesApi.Models.Notes.Request;
 using NotesApi.Models.Tag;
+using NotesApi.Models.Tag.Response;
 
 namespace NotesApi.Services;
 
 public interface ITagService
 {
-    public Task<Page<Tag>> GetAllByUserAsync(RequestFilter filter, int id);
-    public Task<Tag> GetByIdAsync(int id);
-    public Task<Tag> CreateAsync(TagRequest model);
+    public Task<Page<TagResponse>> GetAllByUserAsync(RequestFilter filter, int id);
+    public Task<TagResponse> GetByIdAsync(int id);
+    public Task<Tag> GetByIdDbAsync(int id);
+    public Task<TagResponse> CreateAsync(TagRequest model);
     public Task<bool> DeleteAsync(int id);
-    public Task<Tag> UpdateAsync(TagRequest model);
+    public Task<TagResponse> UpdateAsync(int id, TagRequest model);
 }
 
 public class TagServices : ITagService
@@ -32,60 +33,83 @@ public class TagServices : ITagService
         _currentUser = (Account)_httpContextAccessor.HttpContext.Items["Account"];
     }
 
-    public async Task<Page<Tag>> GetAllByUserAsync(RequestFilter filter, int id)
+    public async Task<Page<TagResponse>> GetAllByUserAsync(RequestFilter filter, int id)
     {
         var query = _context.Tags
-            .Include(x => x.WhoCreated)
-            .Where(x => x.WhoCreatedId == _currentUser.Id);
-        return new Page<Tag>(filter)
+            .Include(x => x.AccountCreated)
+            .Where(x => x.AccountCreatedId == _currentUser.Id)
+            .Select(tag => new TagResponse()
+            {
+                Id = tag.Id,
+                Title = tag.Title,
+                CreatedDate = tag.CreatedDate,
+                WhoCreatedId = tag.AccountCreatedId,
+                Color = tag.Color
+            })
+            .TagsFilter(filter);
+        
+        return new Page<TagResponse>(filter)
         {
-            Objects = await query.ToListAsync(),
+            Objects = await query.Pagination(filter).ToListAsync(),
             ObjectsCount = await query.CountAsync()
         };
     }
 
-    public async Task<Tag> GetByIdAsync(int id)
+    public async Task<TagResponse> GetByIdAsync(int id)
     {
-        return await _context.Tags
-                   .Include(x => x.Notes)
+        var dbTag = await _context.Tags
+                        .Include(x => x.NoteTags)
                    .FirstOrDefaultAsync(x => x.Id == id
-                                             && x.WhoCreatedId == _currentUser.Id) ??
+                                             && x.AccountCreatedId == _currentUser.Id) ??
                throw new KeyNotFoundException($"Тэг с ID[{id}] не найден");
+        return _mapper.Map<TagResponse>(dbTag);
+    }
+    
+    public async Task<Tag> GetByIdDbAsync(int id)
+    {
+        var dbTag = await _context.Tags
+                        .Include(x => x.NoteTags)
+                        .FirstOrDefaultAsync(x => x.Id == id
+                                                  && x.AccountCreatedId == _currentUser.Id) ??
+                    throw new KeyNotFoundException($"Тэг с ID[{id}] не найден");
+        return dbTag;
     }
 
-    public async Task<Tag> CreateAsync(TagRequest model)
+    public async Task<TagResponse> CreateAsync(TagRequest model)
     {
-        var dbNote = _mapper.Map<Tag>(model);
-        dbNote.CreatedDate = DateTime.Now;
-        dbNote.WhoCreatedId = _currentUser.Id;
-
-        var allDbTags = _context.Tags
-            .Where(x => x.WhoCreatedId == _currentUser.Id)
-            .ToList();
-
-        await _context.Tags.AddAsync(dbNote);
+        var currentTitle = model.Title.Trim().ToLower();
+        var isExsistTag = await _context.Tags.AnyAsync(x => x.AccountCreatedId == _currentUser.Id &&
+                                                            x.Title.Trim().ToLower() == currentTitle);
+        if (isExsistTag) throw new AppException($"Тэг с названием [{model.Title}] уже существует");
+        
+        var dbTag = _mapper.Map<Tag>(model);
+        dbTag.CreatedDate = DateTime.Now;
+        dbTag.AccountCreatedId = _currentUser.Id;
+        
+        await _context.Tags.AddAsync(dbTag);
         await _context.SaveChangesAsync();
 
-        return dbNote;
+        return _mapper.Map<TagResponse>(dbTag);
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var tagToDelete = await GetByIdAsync(id);
-        if (tagToDelete.Notes.Count > 0)
+        var tagToDelete = await GetByIdDbAsync(id);
+        if (tagToDelete.NoteTags.Count > 0)
             throw new AppException($"Тэг с [{id}] нельзя удалить, он используется в заметках");
-        
         _context.Tags.Remove(tagToDelete);
         await _context.SaveChangesAsync();
 
         return true;
     }
 
-    public async Task<Tag> UpdateAsync(TagRequest model)
+    public async Task<TagResponse> UpdateAsync(int id, TagRequest model)
     {
-        var dbModel = _mapper.Map<Tag>(model);
-        _context.Tags.Update(dbModel);
+        var dbTag = await GetByIdDbAsync(id);
+        _mapper.Map(model, dbTag);
+        
+        _context.Tags.Update(dbTag);
         await _context.SaveChangesAsync();
-        return dbModel;
+        return _mapper.Map<TagResponse>(dbTag);
     }
 }

@@ -17,19 +17,15 @@ public class Note
     [Required]
     public DateTime CreatedDate { get; set; }
     
-    public int WhoCreatedId { get; set; }
+    public int AccountCreatedId { get; set; }
     
-    [ForeignKey("WhoCreatedId")]
-    public virtual Account WhoCreated { get; set; }
+    [ForeignKey("AccountCreatedId")]
+    public virtual Account AccountCreated { get; set; }
     
     public DateTime? UpdatedDate { get; set; }
-    public int? WhoUpdatedId { get; set; }
-    
-    [ForeignKey("WhoUpdatedId")]
-    public virtual Account? WhoUpdated { get; set; }
     
     [MaxLength(7)] // Длина строки для HEX цвета (#RRGGBB)
     public string? Color { get; set; }
-
-    public ICollection<NoteTags> Tags { get; set; }
+    
+    public ICollection<NoteTags> NoteTags { get; set; }
 }
